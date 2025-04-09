@@ -488,15 +488,93 @@ public:
          y <= allocation.y + getHeight ();
    }
 
+   inline int getPotentialWidth()
+   {
+      int width;
+      if (parent == NULL && quasiParent == NULL) {
+         int viewportWidth =
+            layout->viewportWidth - (layout->canvasHeightGreater ?
+                                     layout->vScrollbarThickness : 0);
+         width = viewportWidth;
+         assert(width != -1);
+      } else if (parent) {
+         width = parent->getAvailWidth (true) - parent->boxDiffWidth ();
+      } else /* if (quasiParent) */ {
+         width = quasiParent->getAvailWidth (true) - quasiParent->boxDiffWidth ();
+      }
+
+      return width;
+   }
+   inline int width() {
+      int width = 0;
+
+      if (style->display ==  style::DISPLAY_INLINE) {
+         return 0;
+      }
+
+      if (style::isAbsLength(style->width)) {
+         width = style::absLengthVal(style->width);
+      } else if (style::isPerLength(style->width)) {
+         width = style::multiplyWithPerLength(getPotentialWidth(), style->width);
+      }
+
+      return width;
+   }
+   inline int marginLeft()
+   {
+      if (style::isAbsLength(style->margin.left)) {
+         return style::absLengthVal(style->margin.left);
+      } if (style->margin.left == style::LENGTH_AUTO && style->width != style::LENGTH_AUTO) {
+         int borderBox = style->borderWidth.left + style->padding.left + width() +
+                         style->borderWidth.right + style->padding.right;
+         int totalMargin = getPotentialWidth() - borderBox;
+         return style->margin.right == style::LENGTH_AUTO ? totalMargin / 2 : totalMargin;
+      } else {
+         return 0;
+      }
+   }
+   inline int marginRight()
+   {
+      if (style::isAbsLength(style->margin.right)) {
+         return style::absLengthVal(style->margin.right);
+      } if (style->margin.right == style::LENGTH_AUTO && style->width != style::LENGTH_AUTO) {
+         int borderBox = style->borderWidth.left + style->padding.left + width() +
+                         style->borderWidth.right + style->padding.right;
+         int totalMargin = getPotentialWidth() - borderBox;
+         return style->margin.right == style::LENGTH_AUTO ? totalMargin / 2 : totalMargin - marginLeft();
+      } else {
+         return 0;
+      }
+   }
+   inline int marginTop()
+   {
+      return style::isAbsLength(style->margin.top) ? style::absLengthVal(style->margin.top) : 0;
+   }
+   inline int marginBottom()
+   {
+      return style::isAbsLength(style->margin.bottom) ? style::absLengthVal(style->margin.bottom) : 0;
+   }
    inline int boxOffsetX ()
-   { return extraSpace.left + getStyle()->boxOffsetX (); }
+   {
+      int styleBoxOffsetX = marginLeft() + style->borderWidth.left + style->padding.left;
+      return extraSpace.left + styleBoxOffsetX;
+   }
    inline int boxRestWidth ()
-   { return extraSpace.right + getStyle()->boxRestWidth (); }
+   {
+      int styleBoxRestWidth = marginRight() + style->borderWidth.right + style->padding.right;
+      return extraSpace.right + styleBoxRestWidth;
+   }
    inline int boxDiffWidth () { return boxOffsetX () + boxRestWidth (); }
    inline int boxOffsetY ()
-   { return extraSpace.top + getStyle()->boxOffsetY (); }
+   {
+      int styleBoxOffsetY = marginTop() + style->borderWidth.top + style->padding.top;
+      return extraSpace.top + styleBoxOffsetY;
+   }
    inline int boxRestHeight ()
-   { return extraSpace.bottom + getStyle()->boxRestHeight (); }
+   {
+      int styleBoxRestHeight = marginBottom() + style->borderWidth.bottom + style->padding.bottom;
+      return extraSpace.bottom + styleBoxRestHeight;
+   }
    inline int boxDiffHeight () { return boxOffsetY () + boxRestHeight (); }
    
    /**

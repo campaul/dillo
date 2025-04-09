@@ -457,6 +457,10 @@ public:
    Iterator *iterator (Content::Type mask, bool atEnd);
    int getClickX () {return click_x;};
    int getClickY () {return click_y;};
+   int boxOffsetX () {return childWidget->boxOffsetX();};
+   int boxOffsetY () {return childWidget->boxOffsetY();};
+   int boxDiffWidth () {return childWidget->boxDiffWidth();};
+   int boxDiffHeight () {return childWidget->boxDiffHeight();};
 };
 
 /**
