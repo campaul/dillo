@@ -488,15 +488,26 @@ public:
          y <= allocation.y + getHeight ();
    }
 
+   inline int marginBoxOffsetX ()
+   { return style->margin.left + style->borderWidth.left + style->padding.left; }
+   inline int marginBoxRestWidth ()
+   { return style->margin.right + style->borderWidth.right + style->padding.right; }
+   inline int marginBoxDiffWidth () { return marginBoxOffsetX () + marginBoxRestWidth (); }
+   inline int marginBoxOffsetY ()
+   { return style->margin.top + style->borderWidth.top + style->padding.top; }
+   inline int marginBoxRestHeight ()
+   { return style->margin.bottom + style->borderWidth.bottom + style->padding.bottom; }
+   inline int marginBoxDiffHeight () { return marginBoxOffsetY () + marginBoxRestHeight (); }
+
    inline int boxOffsetX ()
-   { return extraSpace.left + getStyle()->boxOffsetX (); }
+   { return extraSpace.left + marginBoxOffsetX(); }
    inline int boxRestWidth ()
-   { return extraSpace.right + getStyle()->boxRestWidth (); }
+   { return extraSpace.right + marginBoxRestWidth(); }
    inline int boxDiffWidth () { return boxOffsetX () + boxRestWidth (); }
    inline int boxOffsetY ()
-   { return extraSpace.top + getStyle()->boxOffsetY (); }
+   { return extraSpace.top + marginBoxOffsetY (); }
    inline int boxRestHeight ()
-   { return extraSpace.bottom + getStyle()->boxRestHeight (); }
+   { return extraSpace.bottom + marginBoxRestHeight (); }
    inline int boxDiffHeight () { return boxOffsetY () + boxRestHeight (); }
    
    /**

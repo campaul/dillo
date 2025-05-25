@@ -400,7 +400,7 @@ Textblock::Line *Textblock::addLine (int firstWord, int lastWord,
    // just before. The correction in sizeAllocateImpl() is irrelevant
    // in this regard. Also, right floats are not regarded here, but in
    // OutOfFlowMgr::getSize(),
-   lineWidth += (line->leftOffset - getStyle()->boxOffsetX ());
+   lineWidth += (line->leftOffset - marginBoxOffsetX ());
 
    if (lines->size () == 1) {
       // first line
