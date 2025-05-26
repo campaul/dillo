@@ -359,7 +359,7 @@ void Textblock::sizeRequestImpl (core::Requisition *requisition, int numPos,
       // margin of the first line box:
       requisition->ascent = calcVerticalBorder (getStyle()->padding.top,
                                                 getStyle()->borderWidth.top,
-                                                getStyle()->margin.top
+                                                computedMargin().top
                                                 + extraSpace.top,
                                                 firstLine->borderAscent,
                                                 firstLine->marginAscent);
@@ -373,7 +373,7 @@ void Textblock::sizeRequestImpl (core::Requisition *requisition, int numPos,
          // for this case is not necessary.)
          calcVerticalBorder (getStyle()->padding.bottom,
                              getStyle()->borderWidth.bottom,
-                             getStyle()->margin.bottom + extraSpace.bottom,
+                             computedMargin().bottom + extraSpace.bottom,
                              lastLine->borderDescent, lastLine->marginDescent);
    } else {
       requisition->width = leftInnerPadding + boxDiffWidth ();
@@ -1583,7 +1583,7 @@ int Textblock::findLineIndexWhenNotAllocated (int y)
       return
          findLineIndex (y, calcVerticalBorder (getStyle()->padding.top,
                                                getStyle()->borderWidth.top,
-                                               getStyle()->margin.top
+                                               computedMargin().top
                                                + extraSpace.top,
                                                lines->getRef(0)->borderAscent,
                                                lines->getRef(0)->marginAscent));
@@ -2337,14 +2337,14 @@ bool Textblock::calcSizeOfWidgetInFlow (int wordIndex, Widget *widget,
       int rightBorder = boxRestWidth ();
       
       int lastMargin, yLine = yOffsetOfLineToBeCreated (&lastMargin);
-      int yRel = yLine - min (lastMargin, widget->getStyle()->margin.top);
+      int yRel = yLine - min (lastMargin, widget->computedMargin().top);
 
       DBG_OBJ_MSGF ("resize", 1,
                     "leftBorder = %d + %d + (%d == 0 ? %d : 0) = %d, "
                     "rightBorder = %d, yRel = %d - min (%d, %d) = %d",
                     boxOffsetX (), leftInnerPadding , lines->size (),
                     line1OffsetEff, leftBorder, rightBorder, yLine, lastMargin,
-                    widget->getStyle()->margin.top, yRel);
+                    widget->computedMargin().top, yRel);
             
       core::SizeParams childParams;
       DBG_OBJ_ASSOC_CHILD (&childParams);
@@ -3328,14 +3328,14 @@ int Textblock::yOffsetOfLineToBeCreated (int *lastMargin)
    if (lines->size () == 0) {
       result = calcVerticalBorder (getStyle()->padding.top,
                                    getStyle()->borderWidth.top + extraSpace.top,
-                                   getStyle()->margin.top, 0, 0);
+                                   computedMargin().top, 0, 0);
       if (lastMargin)
-         *lastMargin = getStyle()->margin.top;
+         *lastMargin = computedMargin().top;
    } else {
       Line *firstLine = lines->getRef (0), *lastLine = lines->getLastRef ();
       result = calcVerticalBorder (getStyle()->padding.top,
                                    getStyle()->borderWidth.top,
-                                   getStyle()->margin.top + extraSpace.top,
+                                   computedMargin().top + extraSpace.top,
                                    firstLine->borderAscent,
                                    firstLine->marginAscent)
          - firstLine->borderAscent + lastLine->top + lastLine->totalHeight (0);
@@ -3365,7 +3365,7 @@ int Textblock::yOffsetOfLineCreated (Line *line)
    Line *firstLine = lines->getRef (0);
    result = calcVerticalBorder (getStyle()->padding.top,
                                 getStyle()->borderWidth.top,
-                                getStyle()->margin.top + extraSpace.top,
+                                computedMargin().top + extraSpace.top,
                                 firstLine->borderAscent,
                                 firstLine->marginAscent)
       - firstLine->borderAscent + line->top;

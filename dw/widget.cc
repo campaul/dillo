@@ -1365,10 +1365,10 @@ void Widget::setStyle (style::Style *style)
    // script processing RTFL messages could transfer it to something
    // equivalent:
 
-   DBG_OBJ_SET_NUM ("style.margin.top", style->margin.top);
-   DBG_OBJ_SET_NUM ("style.margin.bottom", style->margin.bottom);
-   DBG_OBJ_SET_NUM ("style.margin.left", style->margin.left);
-   DBG_OBJ_SET_NUM ("style.margin.right", style->margin.right);
+   DBG_OBJ_SET_NUM ("style.margin.top", computedMargin().top);
+   DBG_OBJ_SET_NUM ("style.margin.bottom", computedMargin().bottom);
+   DBG_OBJ_SET_NUM ("style.margin.left", computedMargin().left);
+   DBG_OBJ_SET_NUM ("style.margin.right", computedMargin().right);
 
    DBG_OBJ_SET_NUM ("style.border-width.top", style->borderWidth.top);
    DBG_OBJ_SET_NUM ("style.border-width.bottom", style->borderWidth.bottom);
@@ -1493,12 +1493,12 @@ void Widget::drawBox (View *view, style::Style *style, Rectangle *area,
    getPaddingArea (&xPad, &yPad, &widthPad, &heightPad);
    style::drawBackground
       (view, layout, &canvasArea,
-       allocation.x + x + style->margin.left + style->borderWidth.left,
-       allocation.y + y + style->margin.top + style->borderWidth.top,
-       width - style->margin.left - style->borderWidth.left
-       - style->margin.right - style->borderWidth.right,
-       height - style->margin.top - style->borderWidth.top
-       - style->margin.bottom - style->borderWidth.bottom,
+       allocation.x + x + computedMargin().left + style->borderWidth.left,
+       allocation.y + y + computedMargin().top + style->borderWidth.top,
+       width - computedMargin().left - style->borderWidth.left
+       - computedMargin().right - style->borderWidth.right,
+       height - computedMargin().top - style->borderWidth.top
+       - computedMargin().bottom - style->borderWidth.bottom,
        xPad, yPad, widthPad, heightPad, style, style->backgroundColor,
        inverse, false);
 }
@@ -1675,10 +1675,10 @@ void Widget::getBorderArea (int *xBor, int *yBor, int *widthBor, int *heightBor)
 {
    getMarginArea (xBor, yBor, widthBor, heightBor);
 
-   *xBor += style->margin.left;
-   *yBor += style->margin.top;
-   *widthBor -= style->margin.left + style->margin.right;
-   *heightBor -= style->margin.top + style->margin.bottom;
+   *xBor += computedMargin().left;
+   *yBor += computedMargin().top;
+   *widthBor -= computedMargin().left + computedMargin().right;
+   *heightBor -= computedMargin().top + computedMargin().bottom;
 }
 
 /**

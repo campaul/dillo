@@ -1589,9 +1589,9 @@ void Textblock::accumulateWordForLine (int lineIndex, int wordIndex)
       marginAscent = word->size.ascent;
       marginDescent = word->size.descent;
       borderAscent =
-         marginAscent - word->content.widget->getStyle()->margin.top;
+         marginAscent - word->content.widget->computedMargin().top;
       borderDescent =
-         marginDescent - word->content.widget->getStyle()->margin.bottom;
+         marginDescent - word->content.widget->computedMargin().bottom;
 
       word->content.widget->parentRef = makeParentRefInFlow (lineIndex);
       DBG_OBJ_SET_NUM_O (word->content.widget, "parentRef",

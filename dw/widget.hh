@@ -488,6 +488,8 @@ public:
          y <= allocation.y + getHeight ();
    }
 
+   inline style::Box computedMargin () { return style->margin; }
+
    inline int marginBoxOffsetX ()
    { return style->margin.left + style->borderWidth.left + style->padding.left; }
    inline int marginBoxRestWidth ()
