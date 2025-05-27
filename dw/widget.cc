@@ -1367,8 +1367,8 @@ void Widget::setStyle (style::Style *style)
 
    DBG_OBJ_SET_NUM ("style.margin.top", style->margin.top);
    DBG_OBJ_SET_NUM ("style.margin.bottom", style->margin.bottom);
-   DBG_OBJ_SET_NUM ("style.margin.left", style->margin.left);
-   DBG_OBJ_SET_NUM ("style.margin.right", style->margin.right);
+   DBG_OBJ_SET_NUM ("style.margin.left", style->marginLeft());
+   DBG_OBJ_SET_NUM ("style.margin.right", style->marginRight());
 
    DBG_OBJ_SET_NUM ("style.border-width.top", style->borderWidth.top);
    DBG_OBJ_SET_NUM ("style.border-width.bottom", style->borderWidth.bottom);
@@ -1493,10 +1493,10 @@ void Widget::drawBox (View *view, style::Style *style, Rectangle *area,
    getPaddingArea (&xPad, &yPad, &widthPad, &heightPad);
    style::drawBackground
       (view, layout, &canvasArea,
-       allocation.x + x + style->margin.left + style->borderWidth.left,
+       allocation.x + x + style->marginLeft() + style->borderWidth.left,
        allocation.y + y + style->margin.top + style->borderWidth.top,
-       width - style->margin.left - style->borderWidth.left
-       - style->margin.right - style->borderWidth.right,
+       width - style->marginLeft() - style->borderWidth.left
+       - style->marginRight() - style->borderWidth.right,
        height - style->margin.top - style->borderWidth.top
        - style->margin.bottom - style->borderWidth.bottom,
        xPad, yPad, widthPad, heightPad, style, style->backgroundColor,
@@ -1675,9 +1675,9 @@ void Widget::getBorderArea (int *xBor, int *yBor, int *widthBor, int *heightBor)
 {
    getMarginArea (xBor, yBor, widthBor, heightBor);
 
-   *xBor += style->margin.left;
+   *xBor += style->marginLeft();
    *yBor += style->margin.top;
-   *widthBor -= style->margin.left + style->margin.right;
+   *widthBor -= style->marginLeft() + style->marginRight();
    *heightBor -= style->margin.top + style->margin.bottom;
 }
 

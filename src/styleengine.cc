@@ -640,12 +640,14 @@ void StyleEngine::apply (int i, StyleAttrs *attrs, CssPropertyList *props,
                attrs->margin.bottom = 0;
             break;
          case CSS_PROPERTY_MARGIN_LEFT:
-            computeValue (&attrs->margin.left, p->value.lenVal, attrs->font);
+            computeLength (&attrs->margin.left, p->value.lenVal, attrs->font);
+            // TODO: these are wrong now
             if (attrs->margin.left < 0) // \todo fix negative margins in dw/*
                attrs->margin.left = 0;
             break;
          case CSS_PROPERTY_MARGIN_RIGHT:
-            computeValue (&attrs->margin.right, p->value.lenVal, attrs->font);
+            computeLength (&attrs->margin.right, p->value.lenVal, attrs->font);
+            // TODO: these are wrong now
             if (attrs->margin.right < 0) // \todo fix negative margins in dw/*
                attrs->margin.right = 0;
             break;

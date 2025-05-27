@@ -1173,9 +1173,9 @@ void drawBorder (View *view, Layout *layout, Rectangle *area,
    int xb1, yb1, xb2, yb2;
 
    // top left and bottom right point of outer border boundary
-   xb1 = x + style->margin.left;
+   xb1 = x + style->marginLeft();
    yb1 = y + style->margin.top;
-   xb2 = x + (width > 0 ? width - 1 : 0) - style->margin.right;
+   xb2 = x + (width > 0 ? width - 1 : 0) - style->marginRight();
    yb2 = y + (height > 0 ? height - 1 : 0) - style->margin.bottom;
 
    /*

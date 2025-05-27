@@ -589,10 +589,27 @@ public:
       borderStyle.top = borderStyle.right = borderStyle.bottom
          = borderStyle.left = val; }
 
+   inline int marginLeft()
+   {
+      if (style::isAbsLength (margin.left)) {
+         return style::absLengthVal (margin.left);
+      } else {
+         return 0;
+      }
+   }
+   inline int marginRight()
+   {
+      if (style::isAbsLength (margin.right)) {
+         return style::absLengthVal (margin.right);
+      } else {
+         return 0;
+      }
+   }
+
    inline int boxOffsetX ()
-   { return margin.left + borderWidth.left + padding.left; }
+   { return marginLeft() + borderWidth.left + padding.left; }
    inline int boxRestWidth ()
-   { return margin.right + borderWidth.right + padding.right; }
+   { return marginRight() + borderWidth.right + padding.right; }
    inline int boxDiffWidth () { return boxOffsetX () + boxRestWidth (); }
    inline int boxOffsetY ()
    { return margin.top + borderWidth.top + padding.top; }
