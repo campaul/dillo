@@ -776,13 +776,15 @@ int Textblock::getAvailWidthOfChild (Widget *child, bool forceValue)
             if (width != -1) {
                /* Clamp to min-width and max-width if given, taking into
                 * account leftInnerPadding. */
+               int maxMarginLeft = 0, maxMarginRight = 0;
                int maxWidth = child->calcWidth (child->getStyle()->maxWidth,
-                     -1, this, -1, false);
+                     -1, this, -1, false, &maxMarginLeft, &maxMarginRight);
                if (maxWidth != -1 && width > maxWidth - leftInnerPadding)
                   width = maxWidth - leftInnerPadding;
 
+               int minMarginLeft = 0, minMarginRight = 0;
                int minWidth = child->calcWidth (child->getStyle()->minWidth,
-                     -1, this, -1, false);
+                     -1, this, -1, false, &minMarginLeft, &minMarginRight);
                if (minWidth != -1 && width < minWidth - leftInnerPadding)
                   width = minWidth - leftInnerPadding;
             }

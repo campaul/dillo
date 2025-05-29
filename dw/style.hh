@@ -918,6 +918,7 @@ public:
 
 void drawBorder (View *view, Layout *layout, Rectangle *area,
                  int x, int y, int width, int height,
+                 int marginLeft, int marginRight,
                  Style *style, bool inverse);
 void drawBackground (View *view, Layout *layout, Rectangle *area,
                      int x, int y, int width, int height,

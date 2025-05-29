@@ -97,6 +97,7 @@ Widget::Widget ()
    allocation.descent = 0;
 
    extraSpace.top = extraSpace.right = extraSpace.bottom = extraSpace.left = 0;
+   margin.top = margin.right = margin.bottom = margin.left = 0;
 
    style = NULL;
    bgColor = NULL;
@@ -883,12 +884,15 @@ void Widget::correctExtremes (Extremes *extremes, bool useAdjustmentWidth)
          layout->viewportWidth - (layout->canvasHeightGreater ?
                                   layout->vScrollbarThickness : 0);
 
+      int baseMarginLeft = 0, baseMarginRight = 0;
       int width = calcWidth (getStyle()->width, viewportWidth, NULL,
-                             limitMinWidth, false);
+                             limitMinWidth, false, &baseMarginLeft, &baseMarginRight);
+      int minMarginLeft = 0, minMarginRight = 0;
       int minWidth = calcWidth (getStyle()->minWidth, viewportWidth, NULL,
-                                limitMinWidth, false);
+                                limitMinWidth, false, &minMarginLeft, &minMarginRight);
+      int maxMarginLeft = 0, maxMarginRight = 0;
       int maxWidth = calcWidth (getStyle()->maxWidth, viewportWidth, NULL,
-                                limitMinWidth, false);
+                                limitMinWidth, false, &maxMarginLeft, &maxMarginRight);
 
       DBG_OBJ_MSGF ("resize", 1, "width = %d, minWidth = %d, maxWidth = %d",
                     width, minWidth, maxWidth);
@@ -930,38 +934,72 @@ void Widget::correctExtremes (Extremes *extremes, bool useAdjustmentWidth)
  *
  */
 int Widget::calcWidth (style::Length cssValue, int refWidth, Widget *refWidget,
-                       int limitMinWidth, bool forceValue)
+                       int limitMinWidth, bool forceValue,
+                       int *marginLeft, int *marginRight)
 {
    DBG_OBJ_ENTER ("resize", 0, "calcWidth", "0x%x, %d, %p, %d",
                   cssValue, refWidth, refWidget, limitMinWidth);
 
    assert (refWidth != -1 || refWidget != NULL);
 
-   int width;
+   int contentWidth;
+   int width = 0;
 
    if (style::isAbsLength (cssValue)) {
       DBG_OBJ_MSGF ("resize", 1, "absolute width: %dpx",
                     style::absLengthVal (cssValue));
-      width = misc::max (style::absLengthVal (cssValue) + boxDiffWidth (),
-                         limitMinWidth);
+      contentWidth = style::absLengthVal (cssValue);
    } else if (style::isPerLength (cssValue)) {
       DBG_OBJ_MSGF ("resize", 1, "percentage width: %g%%",
                     100 * style::perLengthVal_useThisOnlyForDebugging
                              (cssValue));
-      if (refWidth != -1)
-         width = misc::max (applyPerWidth (refWidth, cssValue), limitMinWidth);
-      else {
+      if (refWidth != -1) {
+         contentWidth = style::multiplyWithPerLength (refWidth, cssValue);
+      } else {
          int availWidth = refWidget->getAvailWidth (forceValue);
          if (availWidth != -1) {
             int containerWidth = availWidth - refWidget->boxDiffWidth ();
-            width = misc::max (applyPerWidth (containerWidth, cssValue),
-                               limitMinWidth);
+            contentWidth = style::multiplyWithPerLength (containerWidth, cssValue);
          } else
             width = -1;
       }
    } else {
       DBG_OBJ_MSG ("resize", 1, "not specified");
       width = -1;
+   }
+
+   if (width != -1) {
+      int expandableWidth = 0;
+      if (refWidth != -1) {
+         expandableWidth = refWidth;
+      } else {
+         int availWidth = refWidget->getAvailWidth (forceValue);
+         if (availWidth != -1) {
+            expandableWidth = availWidth - refWidget->boxDiffWidth ();
+         }
+      }
+
+      expandableWidth = expandableWidth - contentWidth;
+
+      if (style->margin.left == style::LENGTH_AUTO && style->margin.right == style::LENGTH_AUTO) {
+         *marginLeft = expandableWidth / 2;
+         *marginRight = expandableWidth / 2;
+      } else if (style->margin.left == style::LENGTH_AUTO) {
+         *marginLeft = expandableWidth;
+         *marginRight = style->marginRight();
+      } else if (style->margin.right == style::LENGTH_AUTO) {
+         *marginLeft = style->marginLeft();
+         *marginRight = expandableWidth;
+      } else {
+         *marginLeft = style->marginLeft();
+         *marginRight = style->marginRight();
+      }
+
+      // TODO: this assumes marginLeft and marginRight are initialized to 0
+      width = misc::max (contentWidth + boxDiffWidth(), limitMinWidth);
+   } else {
+      *marginLeft = style->marginLeft();
+      *marginRight = style->marginRight();
    }
 
    DBG_OBJ_LEAVE_VAL ("%d", width);
@@ -996,8 +1034,9 @@ void Widget::calcFinalWidth (style::Style *style, int refWidth,
                   refWidth, refWidget, limitMinWidth, *finalWidth);
 
    int w = *finalWidth;
+   int baseMarginLeft = 0, baseMarginRight = 0;
    int width = calcWidth (style->width, refWidth, refWidget, limitMinWidth,
-                          forceValue);
+                          forceValue, &baseMarginLeft, &baseMarginRight);
    DBG_OBJ_MSGF ("resize", 1, "w = %d, width = %d", w, width);
 
    if (width != -1)
@@ -1005,31 +1044,44 @@ void Widget::calcFinalWidth (style::Style *style, int refWidth,
 
    /* Only correct w if not set to auto (-1) */
    if (w != -1) {
+      int minMarginLeft = 0, minMarginRight = 0;
       int minWidth = calcWidth (style->minWidth, refWidth, refWidget,
-                                limitMinWidth, forceValue);
+                                limitMinWidth, forceValue, &minMarginLeft, &minMarginRight);
+      int maxMarginLeft = 0, maxMarginRight = 0;
       int maxWidth = calcWidth (style->maxWidth, refWidth, refWidget,
-                                limitMinWidth, forceValue);
+                                limitMinWidth, forceValue, &maxMarginLeft, &maxMarginRight);
 
       DBG_OBJ_MSGF ("resize", 1, "minWidth = %d, maxWidth = %d",
                     minWidth, maxWidth);
 
       if (minWidth != -1 && maxWidth != -1) {
          /* Prefer the maximum size for pathological cases (min > max) */
-         if (maxWidth < minWidth)
+         if (maxWidth < minWidth) {
             maxWidth = minWidth;
+            maxMarginLeft = minMarginLeft;
+            maxMarginRight = minMarginRight;
+         }
       }
 
-      if (minWidth != -1 && w < minWidth)
+      if (minWidth != -1 && w < minWidth) {
          w = minWidth;
+         baseMarginLeft = minMarginLeft;
+         baseMarginRight = minMarginRight;
+      }
 
-      if (maxWidth != -1 && w > maxWidth)
+      if (maxWidth != -1 && w > maxWidth) {
          w = maxWidth;
+         baseMarginLeft = maxMarginLeft;
+         baseMarginRight = maxMarginRight;
+      }
    }
 
    /* Check postcondition: *finalWidth != -1 (implies) w != -1  */
    assert(!(*finalWidth != -1 && w == -1));
 
    *finalWidth = w;
+   margin.left = baseMarginLeft;
+   margin.right = baseMarginRight;
 
    DBG_OBJ_LEAVE_VAL ("%d", *finalWidth);
 }
@@ -1479,7 +1531,7 @@ void Widget::drawBox (View *view, style::Style *style, Rectangle *area,
 
    style::drawBorder (view, layout, &canvasArea,
                       allocation.x + x, allocation.y + y,
-                      width, height, style, inverse);
+                      width, height, margin.left, margin.right, style, inverse);
 
    // This method is used for inline elements, where the CSS 2 specification
    // does not define what here is called "reference area". To make it look
@@ -1493,10 +1545,10 @@ void Widget::drawBox (View *view, style::Style *style, Rectangle *area,
    getPaddingArea (&xPad, &yPad, &widthPad, &heightPad);
    style::drawBackground
       (view, layout, &canvasArea,
-       allocation.x + x + style->marginLeft() + style->borderWidth.left,
+       allocation.x + x + margin.left + style->borderWidth.left,
        allocation.y + y + style->margin.top + style->borderWidth.top,
-       width - style->marginLeft() - style->borderWidth.left
-       - style->marginRight() - style->borderWidth.right,
+       width - margin.left - style->borderWidth.left
+       - style->margin.right - style->borderWidth.right,
        height - style->margin.top - style->borderWidth.top
        - style->margin.bottom - style->borderWidth.bottom,
        xPad, yPad, widthPad, heightPad, style, style->backgroundColor,
@@ -1520,7 +1572,7 @@ void Widget::drawWidgetBox (View *view, Rectangle *area, bool inverse)
    int xMar, yMar, widthMar, heightMar;
    getMarginArea (&xMar, &yMar, &widthMar, &heightMar);
    style::drawBorder (view, layout, &canvasArea, xMar, yMar, widthMar,
-                      heightMar, style, inverse);
+                      margin.left, margin.right, heightMar, style, inverse);
 
    int xPad, yPad, widthPad, heightPad;
    getPaddingArea (&xPad, &yPad, &widthPad, &heightPad);
@@ -1539,7 +1591,6 @@ void Widget::drawWidgetBox (View *view, Rectangle *area, bool inverse)
          bgColor = layout->getBgColor ();
    } else
       bgColor = style->backgroundColor;
-
    style::drawBackground (view, layout, &canvasArea,
                           xPad, yPad, widthPad, heightPad,
                           xPad, yPad, widthPad, heightPad,
@@ -1675,9 +1726,9 @@ void Widget::getBorderArea (int *xBor, int *yBor, int *widthBor, int *heightBor)
 {
    getMarginArea (xBor, yBor, widthBor, heightBor);
 
-   *xBor += style->marginLeft();
+   *xBor += margin.left;
    *yBor += style->margin.top;
-   *widthBor -= style->marginLeft() + style->marginRight();
+   *widthBor -= margin.left + margin.right;
    *heightBor -= style->margin.top + style->margin.bottom;
 }
 
@@ -1796,13 +1847,15 @@ int Widget::getAvailWidthOfChild (Widget *child, bool forceValue)
 
          if (width != -1) {
             /* Clamp to min-width and max-width if given */
+            int maxMarginLeft = 0, maxMarginRight = 0;
             int maxWidth = child->calcWidth (child->getStyle()->maxWidth,
-                  -1, this, -1, false);
+                  -1, this, -1, false, &maxMarginLeft, &maxMarginRight);
             if (maxWidth != -1 && width > maxWidth)
                width = maxWidth;
 
+            int minMarginLeft = 0, minMarginRight = 0;
             int minWidth = child->calcWidth (child->getStyle()->minWidth,
-                  -1, this, -1, false);
+                  -1, this, -1, false, &minMarginLeft, &minMarginRight);
             if (minWidth != -1 && width < minWidth)
                width = minWidth;
          }
@@ -2142,12 +2195,15 @@ void Widget::correctExtremesOfChild (Widget *child, Extremes *extremes,
    if (effContainer == this) {
       int limitMinWidth =
          useAdjustmentWidth ? child->getMinWidth (extremes, false) : 0;
+      int baseMarginLeft = 0, baseMarginRight = 0;
       int width = child->calcWidth (child->getStyle()->width, -1, this,
-                                    limitMinWidth, false);
+                                    limitMinWidth, false, &baseMarginLeft, &baseMarginRight);
+      int minMarginLeft = 0, minMarginRight = 0;
       int minWidth = child->calcWidth (child->getStyle()->minWidth, -1, this,
-                                       limitMinWidth, false);
+                                       limitMinWidth, false, &minMarginLeft, &minMarginRight);
+      int maxMarginLeft = 0, maxMarginRight = 0;
       int maxWidth = child->calcWidth (child->getStyle()->maxWidth, -1, this,
-                                       limitMinWidth, false);
+                                       limitMinWidth, false, &maxMarginLeft, &maxMarginRight);
 
       DBG_OBJ_MSGF ("resize", 1, "width = %d, minWidth = %d, maxWidth = %d",
                     width, minWidth, maxWidth);

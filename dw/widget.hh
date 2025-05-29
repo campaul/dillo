@@ -225,6 +225,8 @@ protected:
     */
    style::Box extraSpace;
 
+   style::Box margin;
+
    /**
     * \brief Set iff this widget constitutes a stacking context, as defined by
     *    CSS.
@@ -489,9 +491,9 @@ public:
    }
 
    inline int boxOffsetX ()
-   { return extraSpace.left + getStyle()->boxOffsetX (); }
+   { return extraSpace.left + getStyle()->borderWidth.left + getStyle()->padding.left + margin.left; }
    inline int boxRestWidth ()
-   { return extraSpace.right + getStyle()->boxRestWidth (); }
+   { return extraSpace.right + getStyle()->borderWidth.right + getStyle()->padding.right + margin.right; }
    inline int boxDiffWidth () { return boxOffsetX () + boxRestWidth (); }
    inline int boxOffsetY ()
    { return extraSpace.top + getStyle()->boxOffsetY (); }
@@ -535,7 +537,8 @@ public:
                             bool allowDecreaseWidth, bool allowDecreaseHeight);
    void correctExtremes (Extremes *extremes, bool useAdjustmentWidth);
    int calcWidth (style::Length cssValue, int refWidth, Widget *refWidget,
-                  int limitMinWidth, bool forceValue);
+                  int limitMinWidth, bool forceValue,
+                  int *marginLeft, int *marginRight);
    void calcFinalWidth (style::Style *style, int refWidth, Widget *refWidget,
                         int limitMinWidth, bool forceValue, int *finalWidth);
    int calcHeight (style::Length cssValue, bool usePercentage, int refHeight,
